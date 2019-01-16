@@ -36,10 +36,18 @@ sudo -S mv ./kubectl /usr/local/bin/kubectl
 # kubectl bash complition
 # --------------------------------------
 
+sudo yum install bash-completion
+
+cat << 'EOT' >> ~/.bashrc
+
+source /etc/profile.d/bash_completion.sh
+
 if type "kubectl" > /dev/null 2>&1
 then
   source <(kubectl completion bash)
 fi
+
+EOT
 
 # --------------------------------------
 # kubectx & kubens & fzf
