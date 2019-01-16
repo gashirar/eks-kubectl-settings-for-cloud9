@@ -9,12 +9,9 @@ You'll be able to use...
 
 ## Getting Started
 
-### Before Install
-```bash
-export AWS_EKS_CLUSTER_NAME="YOUR-CLUSTER-NAME"
-```
 
-### Install Script
+### Install Commands
+
 ```bash
 #!/bin/bash -eu
 
@@ -54,16 +51,60 @@ sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 yes | ~/.fzf/install
 
-# --------------------------------------
-# Setting kubectl
-# --------------------------------------
-
-aws eks update-kubeconfig --name ${AWS_EKS_CLUSTER_NAME} 
 ```
 
-### After Install
 ``` bash
 source ~/.bashrc
+```
+
+### Change IAM Settings
+Cloud9 normally manages IAM credentials dynamically using STS.
+So you will disable it and rely on the IAM role instead.
+
+#### Change Cloud9 Settings
+- Return to your workspace and click the sprokect, or launch a new tab to open the Preference tab.
+- Select **AWS SETTINGS**
+- Turn off **AWS managed temporary credentials**
+
+#### Create IAM role and Attach role to Cloud9 EC2 instance
+
+https://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#attach-iam-role
+
+#### Add an IAM role to an Amazon EKS cluster
+
+Example:
+```bash
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  mapRoles: |
+    - rolearn: arn:aws:iam::555555555555:role/devel-worker-nodes-NodeInstanceRole-74RF4UBDUKL6
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+    - rolearn: arn:aws:iam::012345678901:role/YOUR-ROLE-NAME
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:masters
+  mapUsers: |
+    - userarn: arn:aws:iam::555555555555:user/admin
+      username: admin
+      groups:
+        - system:masters
+    - userarn: arn:aws:iam::111122223333:user/ops-user
+      username: ops-user
+      groups:
+        - system:masters
+```
+
+#### Create a kubeconfig for EKS
+```bash
+export AWS_EKS_CLUSTER_NAME="YOUR-CLUSTER-NAME"
+aws eks update-kubeconfig --name ${AWS_EKS_CLUSTER_NAME}
 ```
 
 Enjoy!
